@@ -1,4 +1,8 @@
 module Main (main) where
 
+import MyLib (someFunc)
+
 main :: IO ()
-main = putStrLn "Test suite not yet implemented."
+main = do
+  someFunc
+  error "Test suite not yet implemented."
