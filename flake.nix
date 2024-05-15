@@ -1,7 +1,7 @@
 {
   description = "plutus-conformance";
   nixConfig = {
-    extra-substituters = [ "https://cache.iog.io" ];
+    extra-substituters = [ "https://plutonomicon.cachix.org" ];
     allow-import-from-derivation = "true";
     auto-optimise-store = "true";
   };
