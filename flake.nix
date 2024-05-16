@@ -1,10 +1,5 @@
 {
   description = "plutus-conformance";
-  nixConfig = {
-    extra-substituters = [ "https://plutonomicon.cachix.org" ];
-    allow-import-from-derivation = "true";
-    auto-optimise-store = "true";
-  };
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs";
     flake-parts.url = "github:hercules-ci/flake-parts";
