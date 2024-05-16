@@ -31,7 +31,7 @@
         inputs.pre-commit-hooks-nix.flakeModule
       ];
       systems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ];
-      perSystem = { config, system, lib, self', ... }:
+      perSystem = { config, system, ... }:
         let
           pkgs =
             import haskell-nix.inputs.nixpkgs {
@@ -84,7 +84,10 @@
             # TODO(chfanghr): Configuration for ormolu
             ormolu.enable = true;
             shellcheck.enable = true;
-            typos.enable = true;
+            typos = {
+              enable = true;
+              settings.configPath = "./.typos.toml";
+            };
             markdownlint.enable = true;
           };
         };
