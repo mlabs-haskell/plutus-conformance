@@ -74,7 +74,7 @@
           flake = project.flake { };
         in
         {
-          inherit (flake) devShells packages;
+          inherit (flake) devShells packages checks;
 
           pre-commit.settings.hooks = {
             nixpkgs-fmt.enable = true;
