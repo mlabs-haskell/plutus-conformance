@@ -43,7 +43,8 @@ and we forget things or make decisions that, perhaps, may not be ideal at the
 time. Therefore, limiting cognitive load is good for us, as it reduces the
 amount of trouble we can inflict due to said skull limitations. One of the worst
 contributors to cognitive load (after inconsistency) is _non-local information_
-- the requirement to have some understanding beyond the scope of the current
+
+* the requirement to have some understanding beyond the scope of the current
 unit of work. That unit of work can be a data type, a module, or even a whole
 project; in all cases, the more non-local information we require ourselves to
 hold in our minds, the less space that leaves for actually doing the task at
@@ -380,7 +381,7 @@ knowing where a given identifier's definition can be found. Having explicit
 imports of the form described helps make this search as straightforward as
 possible. This also limits cognitive load when examining the sources (if we
 don't import something, we don't need to care about it in general). Lastly,
-being explicit avoids stealing too many useful names. 
+being explicit avoids stealing too many useful names.
 
 In general, type names occur far more often in code than function calls: we have
 to use a type name every time we write a type signature, but it's unlikely we
@@ -417,7 +418,7 @@ quuxFromBaz,
 ) where
 ```
 
-We allow an exception if Haddocks wouldn't be required for a module 
+We allow an exception if Haddocks wouldn't be required for a module
 according to these standards.
 
 In the specific case where a module only provides instances ('compatibility
@@ -471,7 +472,7 @@ from outside the project: in addition to being even more tedious, this is
 arguably an abstraction boundary violation. We forbid module re-exports on the
 same grounds as we restrict imports: without knowing exactly what we’re
 re-exporting, it makes it very difficult to see what exact public interface we
-are presenting to the world. 
+are presenting to the world.
 
 ## LANGUAGE pragmata
 
@@ -543,7 +544,7 @@ always-on doesn’t really do anything other than save us needless typing.
 
 ``BangPatterns`` are a much more convenient way to force evaluation than
 repeatedly using ``seq``. They are not confusing, and are considered
-ubiquitous enough for inclusion into the ``GHC2021`` and ``GHC2024`` 
+ubiquitous enough for inclusion into the ``GHC2021`` and ``GHC2024``
 standards. Having this
 extension on by default simplifies a lot of performance tuning work, and
 doesn’t really require signposting.
@@ -582,15 +583,15 @@ instance could be. This allows powerful examples such as this:
 
 ```haskell
 newtype FooM (a :: Type) =
-	FooM (ReaderT Int (StateT Text IO) a)
-	deriving (
-		Functor,
-		Applicative,
-		Monad,
-		MonadReader Int,
-		MonadState Text,
-		MonadIO
-		) via (ReaderT Int (StateT Text IO))
+ FooM (ReaderT Int (StateT Text IO) a)
+ deriving (
+  Functor,
+  Applicative,
+  Monad,
+  MonadReader Int,
+  MonadState Text,
+  MonadIO
+  ) via (ReaderT Int (StateT Text IO))
 ```
 
 The savings in code length alone make this worthwhile; in combination with
@@ -674,7 +675,7 @@ either have to write a dummy ``case`` statement:
 
 ```haskell
 foo s = case s of
-	-- rest of code here
+ -- rest of code here
 ```
 
 Or, alternatively, we need multiple heads:
@@ -723,7 +724,7 @@ problem, particularly in error messages, by replacing ``*`` with ``Type``,
 which is more informative and more consistent. There’s no reason not to have
 this enabled by default.
 
-``OverloadedLabels``, together with some other extensions and optics, is our 
+``OverloadedLabels``, together with some other extensions and optics, is our
 solution for the problems of Haskell2010 records; see the Records
 section for more information. As it must be on at every use site of labelled
 optics, we would have to enable it pretty much everywhere anyway: making it
@@ -734,12 +735,12 @@ choice of string representation for basically _any_ problem, but at the same
 time being forced on us by ``base``. This has led to a range of replacements,
 of which ``Text`` is generally the most advised. Having
 ``OverloadedStrings`` enabled allows us to use string literal syntax for both
-``Text`` and ``String``, which is convenient and also fairly obvious in intent. 
+``Text`` and ``String``, which is convenient and also fairly obvious in intent.
 It is not, however, without problems:
 
 * ``ByteStrings`` are treated as ASCII strings by their ``IsString`` instance,
   which makes its string literal behaviour somewhat surprising. This is widely
-  considered a mistake. 
+  considered a mistake.
 * Overly polymorphic behaviour in many functions (especially in the presence
   of type classes) often forces either type signatures or type arguments
   together with ``IsString``.
@@ -771,11 +772,11 @@ would produce _extremely_ weird behaviour. Consider the case below:
 ```haskell
 foo :: a -> b
 foo = bar . baz
-	where
-		bar :: String -> b
-		bar = ...
-		baz :: a -> String
-		baz = ...
+ where
+  bar :: String -> b
+  bar = ...
+  baz :: a -> String
+  baz = ...
 ```
 
 This would cause GHC to produce a _fresh_ ``a`` in the ``where``-bind of
@@ -789,13 +790,13 @@ exact situation. This becomes really bad when the type variable is constrained:
 ```haskell
 foo :: (Monoid m) => m -> String
 foo = bar . baz
-	where
-		baz :: m -> Int
-		baz = ... -- this has no idea that m is a Monoid, since m is fresh!
+ where
+  baz :: m -> Int
+  baz = ... -- this has no idea that m is a Monoid, since m is fresh!
 ```
 
 Furthermore, with the availability of ``TypeApplications``, as well as
-possible ambiguities stemming from multi-parameter type classes, we need 
+possible ambiguities stemming from multi-parameter type classes, we need
 to know the order of type variable application. While
 there _is_ a default, having to remember it, especially in the presence of
 type class constraints, is tedious and error-prone. This becomes even worse
@@ -1029,7 +1030,7 @@ A project MUST use the [PVP][pvp]. Three, and only three, version numbers MUST b
 used: a major version and two minor versions.
 
 Any changes MUST be logged in `CHANGELOG.md`, which MUST comply with [Keep A
-Changelog](https://keepachangelog.com/en/1.1.0/) requirements. 
+Changelog](https://keepachangelog.com/en/1.1.0/) requirements.
 
 ### Justification
 
@@ -1045,7 +1046,7 @@ Changelogs are critical for several reasons: they allow downstream users to
 quickly see what's changed, provide context for incoming developers, and
 maintain an easier-to-read record of project changes over time. Keep A Changelog
 is a relatively common format, which is designed for easy reading, which suits
-our needs. 
+our needs.
 
 ## Documentation
 
@@ -1258,7 +1259,7 @@ newtype Foo = Foo (Bar Int)
     deriving (Eq) via (Bar Int)
 ```
 
-Deriving via MUST be used instead of ``newtype`` derivation. `Show` instances MUST 
+Deriving via MUST be used instead of ``newtype`` derivation. `Show` instances MUST
 be stock derived, and `Eq` or `Ord` instances SHOULD be `via`-derived  where possible.
 
 ``type`` MUST NOT be used.
@@ -1287,7 +1288,7 @@ support our efforts, rather than being blind to them, will help us write more
 clear, more robust, and more informative code. Partiality is also an example of
 legacy, and it is legacy of _considerable_ weight. Sometimes, we do need an
 'escape hatch' due to the impossibility of explaining what we want to the
-compiler; this should be the _exception_, not the rule. 
+compiler; this should be the _exception_, not the rule.
 
 Derivations are one of the most useful features of GHC, and extend the
 capabilities of Haskell 2010 considerably. However, with great power comes great
@@ -1504,6 +1505,7 @@ modern API, and is also lower-cost, there is no reason to use
 ``Data.Typeable`` anymore except for legacy compatibility reasons.
 
 ## Import QuickCheck definitions from `Test.QuickCheck` instead of
+
 `Test.Tasty.Quickcheck`
 
 Identifiers exported from both `Test.Tasty.QuickCheck` and `Test.QuickCheck`
@@ -1557,21 +1559,12 @@ consistent with `toJSON`: it shouldn't matter whether we use the intermediate
 `Value` or not.
 
 [pvp]: https://pvp.haskell.org/
-[policeman]: https://hackage.haskell.org/package/policeman
 [haddock-since]: https://haskell-haddock.readthedocs.io/en/latest/markup.html#since
 [bird-tracks]: https://haskell-haddock.readthedocs.io/en/latest/markup.html#code-blocks
-[hedgehog-classes]: http://hackage.haskell.org/package/hedgehog-classes
-[hspec-hedgehog]: http://hackage.haskell.org/package/hspec-hedgehog
-[property-based-testing]: https://dl.acm.org/doi/abs/10.1145/1988042.1988046
-[hedgehog]: http://hackage.haskell.org/package/hedgehog
 [deriving-strategies]: https://gitlab.haskell.org/ghc/ghc/-/wikis/commentary/compiler/deriving-strategies
-[functor-parametricity]: https://www.schoolofhaskell.com/user/edwardk/snippets/fmap
 [alexis-king-options]: https://lexi-lambda.github.io/blog/2018/02/10/an-opinionated-guide-to-haskell-in-2018/#warning-flags-for-a-safe-build
 [hlint]: http://hackage.haskell.org/package/hlint
 [rfc-2119]: https://tools.ietf.org/html/rfc2119
 [boolean-blindness]: http://dev.stephendiehl.com/hask/#boolean-blindness
 [parse-dont-validate]: https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/
-[hspec]: http://hackage.haskell.org/package/hspec
-[rdp]: https://hackage.haskell.org/package/record-dot-preprocessor
-[accessors]: https://github.com/ghc-proposals/ghc-proposals/blob/master/proposals/0366-no-ambiguous-field-access.rst
 [ormolu]: https://hackage.haskell.org/package/ormolu-0.7.4.0
