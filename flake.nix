@@ -18,7 +18,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
-  outputs = inputs@{ flake-parts, nixpkgs, haskell-nix, iohk-nix, CHaP, ... }:
+  outputs = inputs@{ flake-parts, haskell-nix, iohk-nix, CHaP, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       debug = true;
       imports = [
@@ -54,7 +54,7 @@
                 haskell-language-server = { };
                 hlint = { };
                 cabal-fmt = { };
-                fourmolu = { };
+                ormolu = { };
                 hspec-discover = { };
                 markdown-unlit = { };
               };
@@ -76,7 +76,6 @@
             deadnix.enable = true;
             statix.enable = true;
             cabal-fmt.enable = true;
-            # TODO(chfanghr): Configuration for ormolu
             ormolu.enable = true;
             shellcheck.enable = true;
             typos = {
