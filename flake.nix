@@ -1,24 +1,32 @@
 {
   description = "plutus-conformance";
-  nixConfig = {
-    extra-substituters = [ "https://plutonomicon.cachix.org" ];
-    allow-import-from-derivation = "true";
-    auto-optimise-store = "true";
-  };
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs";
     flake-parts.url = "github:hercules-ci/flake-parts";
     haskell-nix.url = "github:input-output-hk/haskell.nix";
-    iohk-nix.url = "github:input-output-hk/iohk-nix";
-    iohk-nix.inputs.nixpkgs.follows = "haskell-nix/nixpkgs";
-    CHaP.url = "github:input-output-hk/cardano-haskell-packages?ref=repo";
-    CHaP.flake = false;
+    iohk-nix = {
+      url = "github:input-output-hk/iohk-nix";
+      inputs.nixpkgs.follows = "haskell-nix/nixpkgs";
+    };
+    CHaP = {
+      url = "github:input-output-hk/cardano-haskell-packages?ref=repo";
+      flake = false;
+    };
+    hci-effects.url = "github:mlabs-haskell/hercules-ci-effects/push-cache-effect";
+    pre-commit-hooks-nix = {
+      url = "github:cachix/pre-commit-hooks.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
-  outputs = inputs@{ flake-parts, nixpkgs, haskell-nix, iohk-nix, CHaP, ... }:
+  outputs = inputs@{ flake-parts, haskell-nix, iohk-nix, CHaP, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       debug = true;
+      imports = [
+        inputs.hci-effects.flakeModule
+        inputs.pre-commit-hooks-nix.flakeModule
+      ];
       systems = [ "x86_64-linux" "aarch64-darwin" "x86_64-darwin" "aarch64-linux" ];
-      perSystem = { config, system, lib, self', ... }:
+      perSystem = { lib, config, system, ... }:
         let
           pkgs =
             import haskell-nix.inputs.nixpkgs {
@@ -46,17 +54,41 @@
                 haskell-language-server = { };
                 hlint = { };
                 cabal-fmt = { };
-                fourmolu = { };
+                ormolu = { };
                 hspec-discover = { };
                 markdown-unlit = { };
               };
+              shellHook = ''
+                export LC_CTYPE=C.UTF-8;
+                export LC_ALL=C.UTF-8;
+                export LANG=C.UTF-8;
+                ${config.pre-commit.installationScript}
+              '';
             };
           };
           flake = project.flake { };
         in
         {
-          inherit (flake) devShells;
-          packages = flake.packages;
+          inherit (flake) devShells packages checks;
+
+          pre-commit.settings.hooks = {
+            nixpkgs-fmt.enable = true;
+            deadnix.enable = true;
+            statix.enable = true;
+            cabal-fmt.enable = true;
+            ormolu.enable = true;
+            shellcheck.enable = true;
+            typos = {
+              enable = true;
+              settings.configPath = "./.typos.toml";
+            };
+            markdownlint = {
+              enable = true;
+              settings.configuration = lib.importJSON ./.markdownlint.json;
+            };
+          };
         };
+
+      herculesCI.ciSystems = [ "x86_64-linux" "x86_64-darwin" ];
     };
 }
