@@ -1,15 +1,26 @@
+{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ImportQualifiedPost #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Aux (runBuiltin) where
+module Aux
+  ( runTerm,
+    appBulitinFun,
+    RunTermError (RunTermError),
+    RunTermErrorKind
+      ( BadTerm,
+        EvalFailure
+      ),
+  )
+where
 
-import Control.Monad.Error.Class (liftEither)
+import Control.Monad.Error.Class (MonadError, liftEither)
+import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Aeson qualified as Aeson
-import Data.Bifunctor (Bifunctor (first))
+import Data.Bifunctor (first)
 import Data.Coerce (Coercible, coerce)
-import Data.Default.Class (Default (def))
+import Data.Default.Class (def)
 import Data.Functor (void)
 import Data.Kind (Type)
 import Data.Text (Text)
@@ -37,34 +48,41 @@ import PlutusCore.Evaluation.Machine.ExBudget
 import PlutusCore.Evaluation.Machine.ExBudgetingDefaults qualified as UPLC
 import PlutusCore.MkPlc (TermLike (builtin), mkIterAppNoAnn)
 import PlutusCore.Pretty (prettyPlcClassicDebug)
-import System.Exit (die)
 import System.FilePath ((</>))
 import UntypedPlutusCore qualified as UPlc
 import UntypedPlutusCore.Evaluation.Machine.Cek qualified as UPlc
 
-runBuiltin ::
+data RunTermError = RunTermError String RunTermErrorKind
+  deriving stock (Show, Eq)
+
+data RunTermErrorKind
+  = BadTerm (Error DefaultUni DefaultFun ())
+  | EvalFailure
+      (UPlc.CekEvaluationException UPlc.NamedDeBruijn DefaultUni DefaultFun)
+  deriving stock (Show, Eq)
+
+runTerm ::
+  forall (m :: Type -> Type).
+  (MonadError RunTermError m, MonadIO m) =>
   String -> -- Prefix
   FilePath -> -- Path of a directory, where all the artifacts will be written to
-  Maybe ExBudget ->
-  DefaultFun -> -- A builtin function
-  [Term TyName Name DefaultUni DefaultFun ()] -> -- Arguments to apply to the builtin function
-  IO ()
-runBuiltin name outputDir budget builtinFn args = do
-  let term = appBulitinFun builtinFn args
-
+  Term TyName Name DefaultUni DefaultFun () -> -- Term to be run
+  m ()
+runTerm name outputDir term = do
   (checkedTerm, (evalResult, evalBudget, _evalLog)) <-
-    either
-      (die . (\err -> "(" <> name <> ") " <> "Failed to type check: " <> err) . show)
-      pure
-      $ withTypeCheckedUPlcTerm term
-      $ (,) <$> id <*> evalUPlcTerm budget
+    liftEither $
+      first (RunTermError name . BadTerm) $
+        withTypeCheckedUPlcTerm term $
+          (,) <$> id <*> evalUPlcTerm Nothing
 
   writeUPlcTerm (outputDir </> (name <> ".uplc")) checkedTerm
-  Aeson.encodeFile (outputDir </> (name <> ".uplc.budget.result")) evalBudget
+  liftIO $ Aeson.encodeFile (outputDir </> (name <> ".uplc.budget.result")) evalBudget
 
-  case evalResult of
-    Right finalTerm -> writeUPlcTerm (outputDir </> (name <> ".uplc.result")) finalTerm
-    Left err -> die $ "(" <> name <> ") " <> "Failed to evaluate: " <> show err
+  finalTerm <- liftEither $ first (RunTermError name . EvalFailure) evalResult
+
+  writeUPlcTerm (outputDir </> (name <> ".uplc.result")) finalTerm
+
+-- * Helpers
 
 appBulitinFun ::
   DefaultFun ->
@@ -106,6 +124,7 @@ evalUPlcTerm budget =
         UPlc.logEmitter
   where
     coerceMode ::
+      forall (cost :: Type).
       (Coercible cost ExBudget) =>
       UPlc.ExBudgetMode cost DefaultUni DefaultFun ->
       UPlc.ExBudgetMode ExBudget DefaultUni DefaultFun
@@ -117,7 +136,9 @@ renderUPlcTerm ::
 renderUPlcTerm = show . prettyPlcClassicDebug
 
 writeUPlcTerm ::
+  forall (m :: Type -> Type).
+  (MonadIO m) =>
   FilePath ->
   UPlc.Term UPlc.NamedDeBruijn DefaultUni DefaultFun () ->
-  IO ()
-writeUPlcTerm f = writeFile f . renderUPlcTerm
+  m ()
+writeUPlcTerm f = liftIO . writeFile f . renderUPlcTerm
