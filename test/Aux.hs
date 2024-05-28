@@ -5,13 +5,13 @@
 {-# LANGUAGE TypeFamilies #-}
 
 module Aux
-  ( runTerm,
-    appBulitinFun,
-    RunTermError (RunTermError),
+  ( RunTermError (RunTermError),
     RunTermErrorKind
       ( BadTerm,
         EvalFailure
       ),
+    runTerm,
+    appBulitinFun,
   )
 where
 
@@ -52,21 +52,36 @@ import System.FilePath ((</>))
 import UntypedPlutusCore qualified as UPlc
 import UntypedPlutusCore.Evaluation.Machine.Cek qualified as UPlc
 
-data RunTermError = RunTermError String RunTermErrorKind
+-- | Represent errors that can occur in the 'runTerm' function.
+data RunTermError
+  = RunTermError
+      -- | The name of the testcase
+      String
+      -- | The kind of the error
+      RunTermErrorKind
   deriving stock (Show, Eq)
 
 data RunTermErrorKind
-  = BadTerm (Error DefaultUni DefaultFun ())
-  | EvalFailure
+  = -- | The term doesn't type-check, or has free variables
+    BadTerm (Error DefaultUni DefaultFun ())
+  | -- | An error occurs while evaluating the term in the CEK machine
+    EvalFailure
       (UPlc.CekEvaluationException UPlc.NamedDeBruijn DefaultUni DefaultFun)
   deriving stock (Show, Eq)
 
+-- | 'runTerm name outputDir term' checks the validity of the given 'term' and
+-- | runs it in the CEK machine. The type-erased term, evaluation result and
+-- | budget are written to the 'outputDir' directory, using the following filenames:
+-- | 'name'.uplc, 'name'.uplc.budget.result, 'name'.uplc.result respectively.
 runTerm ::
   forall (m :: Type -> Type).
   (MonadError RunTermError m, MonadIO m) =>
-  String -> -- Prefix
-  FilePath -> -- Path of a directory, where all the artifacts will be written to
-  Term TyName Name DefaultUni DefaultFun () -> -- Term to be run
+  -- | Name of the test case
+  String ->
+  -- | Path of a directory, where all the artifacts will be written to
+  FilePath ->
+  -- | Term to be run
+  Term TyName Name DefaultUni DefaultFun () ->
   m ()
 runTerm name outputDir term = do
   (checkedTerm, (evalResult, evalBudget, _evalLog)) <-
@@ -84,6 +99,7 @@ runTerm name outputDir term = do
 
 -- * Helpers
 
+-- | Apply arguments to a builtin function.
 appBulitinFun ::
   DefaultFun ->
   [Term TyName Name DefaultUni DefaultFun ()] ->
