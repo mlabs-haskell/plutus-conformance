@@ -97,7 +97,7 @@ runTerm name outputDir term = do
 
   writeUPlcTerm (outputDir </> (name <> ".uplc.result")) finalTerm
 
--- * Helpers
+-- Helpers
 
 -- | Apply arguments to a builtin function.
 appBulitinFun ::
