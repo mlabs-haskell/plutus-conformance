@@ -9,7 +9,7 @@
       inputs.nixpkgs.follows = "haskell-nix/nixpkgs";
     };
     CHaP = {
-      url = "github:input-output-hk/cardano-haskell-packages?ref=repo";
+      url = "github:intersectmbo/cardano-haskell-packages?ref=repo";
       flake = false;
     };
     hci-effects.url = "github:mlabs-haskell/hercules-ci-effects/push-cache-effect";
@@ -40,10 +40,10 @@
             };
           project = pkgs.haskell-nix.cabalProject' {
             src = ./.;
-            compiler-nix-name = "ghc964";
-            index-state = "2024-01-16T11:00:00Z";
+            compiler-nix-name = "ghc966";
+            index-state = "2024-07-23T08:58:13Z";
             inputMap = {
-              "https://input-output-hk.github.io/cardano-haskell-packages" = CHaP;
+              "https://chap.intersectmbo.org/" = CHaP;
             };
             shell = {
               withHoogle = true;
