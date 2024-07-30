@@ -33,7 +33,6 @@ import PlutusCore
     TyName,
     TypeCheckConfig (TypeCheckConfig),
     builtinMeaningsToTypes,
-    deBruijnTerm,
     defKindCheckConfig,
     inferType,
     runQuoteT,
@@ -47,7 +46,7 @@ import PlutusCore.Evaluation.Machine.ExBudget
   )
 import PlutusCore.Evaluation.Machine.ExBudgetingDefaults qualified as UPLC
 import PlutusCore.MkPlc (TermLike (builtin), mkIterAppNoAnn)
-import PlutusCore.Pretty (prettyPlcClassicDebug)
+import PlutusCore.Pretty (prettyPlcClassicSimple)
 import System.FilePath ((</>))
 import UntypedPlutusCore qualified as UPlc
 import UntypedPlutusCore.Evaluation.Machine.Cek qualified as UPlc
@@ -89,12 +88,9 @@ runTerm name outputDir term = do
       first (RunTermError name . BadTerm) $
         withTypeCheckedUPlcTerm term $
           (,) <$> id <*> evalUPlcTerm Nothing
-
   writeUPlcTerm (outputDir </> (name <> ".uplc")) checkedTerm
   liftIO $ Aeson.encodeFile (outputDir </> (name <> ".uplc.budget.result")) evalBudget
-
   finalTerm <- liftEither $ first (RunTermError name . EvalFailure) evalResult
-
   writeUPlcTerm (outputDir </> (name <> ".uplc.result")) finalTerm
 
 -- Helpers
@@ -115,8 +111,8 @@ withTypeCheckedUPlcTerm term f = do
   runQuoteT $ do
     tcConfig <- TypeCheckConfig defKindCheckConfig <$> builtinMeaningsToTypes def ()
     void $ inferType tcConfig term
-  term' <- liftEither $ first FreeVariableErrorE $ deBruijnTerm term
-  pure $ f $ eraseTerm term'
+  term' <- liftEither . first FreeVariableErrorE . UPlc.deBruijnTerm . eraseTerm $ term
+  pure . f $ term'
 
 evalUPlcTerm ::
   Maybe ExBudget ->
@@ -135,7 +131,7 @@ evalUPlcTerm budget =
           (coerceMode . UPlc.restricting . ExRestrictingBudget)
           budget
    in UPlc.runCekDeBruijn
-        UPLC.defaultCekParameters
+        UPLC.defaultCekParametersForTesting
         exBudgetMode
         UPlc.logEmitter
   where
@@ -149,7 +145,7 @@ evalUPlcTerm budget =
 renderUPlcTerm ::
   UPlc.Term UPlc.NamedDeBruijn DefaultUni DefaultFun () ->
   String
-renderUPlcTerm = show . prettyPlcClassicDebug
+renderUPlcTerm = show . prettyPlcClassicSimple
 
 writeUPlcTerm ::
   forall (m :: Type -> Type).
