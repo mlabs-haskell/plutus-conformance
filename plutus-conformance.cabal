@@ -1,50 +1,51 @@
 cabal-version:   3.0
 name:            plutus-conformance
 version:         0.0.0.1
-
--- synopsis:
--- description:
 license:         Apache-2.0
 license-file:    LICENSE
 author:          MLabs
 maintainer:      mlabs@mlabs.city
-
--- copyright:
 build-type:      Simple
 extra-doc-files: CHANGELOG.md
-
--- extra-source-files:
 
 common warnings
   ghc-options: -Wall
 
 library
   import:           warnings
-  exposed-modules:  MyLib
+  exposed-modules:
+    Aux
+    Complement
+    CountSetBits
+    FindFirstSetBit
+    Replicate
+    Rotate
+    Shift
 
-  -- other-modules:
-  -- other-extensions:
   build-depends:
-    , base         ^>=4.18.2.0
-    , plutus-core  ==1.31.0.0
+    , aeson
+    , base                ^>=4.18.2.0
+    , bytestring
+    , data-default-class
+    , filepath
+    , mtl
+    , plutus-core         ==1.31.0.0
+    , prettyprinter
+    , text
 
   hs-source-dirs:   src
   default-language: Haskell2010
 
-test-suite plutus-conformance-test
+executable driver
   import:           warnings
-  default-language: Haskell2010
-  type:             exitcode-stdio-1.0
-  hs-source-dirs:   test
   main-is:          Main.hs
-  other-modules:    Aux
   build-depends:
-    , aeson
-    , base                ^>=4.18.2.0
-    , data-default-class
-    , filepath
+    , base
+    , directory
+    , indexed-traversable
     , mtl
     , plutus-conformance
-    , plutus-core         ==1.31.0.0
-    , prettyprinter
-    , text
+    , plutus-core
+
+  hs-source-dirs:   app
+  default-language: Haskell2010
