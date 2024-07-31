@@ -18,6 +18,7 @@ library
     Complement
     CountSetBits
     FindFirstSetBit
+    Replicate
     Rotate
     Shift
 
