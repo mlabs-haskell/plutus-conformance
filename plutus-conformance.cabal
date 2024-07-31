@@ -23,6 +23,7 @@ library
     Replicate
     Rotate
     Shift
+    Xor
 
   build-depends:
     , aeson
