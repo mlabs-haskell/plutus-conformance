@@ -20,6 +20,7 @@ library
     CountSetBits
     FindFirstSetBit
     Or
+    ReadBit
     Replicate
     Rotate
     Shift
