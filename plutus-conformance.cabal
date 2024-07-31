@@ -41,8 +41,11 @@ executable driver
   main-is:          Main.hs
   build-depends:
     , base
+    , directory
+    , indexed-traversable
     , mtl
     , plutus-conformance
+    , plutus-core
 
   hs-source-dirs:   app
   default-language: Haskell2010
