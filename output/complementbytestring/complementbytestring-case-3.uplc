@@ -1,0 +1,1 @@
+[ (builtin complementByteString) (con bytestring #b00b) ]

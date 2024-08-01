@@ -1,0 +1,1 @@
+[ [ (builtin shiftByteString) (con bytestring #) ] (con integer 3) ]

@@ -1,0 +1,1 @@
+[ [ (builtin rotateByteString) (con bytestring #ebfc) ] (con integer -5) ]

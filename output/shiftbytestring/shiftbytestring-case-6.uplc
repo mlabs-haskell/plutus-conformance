@@ -1,0 +1,1 @@
+[ [ (builtin shiftByteString) (con bytestring #ebfc) ] (con integer -16) ]

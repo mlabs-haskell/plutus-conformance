@@ -15,7 +15,7 @@ module Aux
   )
 where
 
-import Control.Monad.Error.Class (MonadError, liftEither)
+import Control.Monad.Error.Class (MonadError, liftEither, throwError)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Aeson qualified as Aeson
 import Data.Bifunctor (first)
@@ -47,7 +47,7 @@ import PlutusCore.Evaluation.Machine.ExBudget
 import PlutusCore.Evaluation.Machine.ExBudgetingDefaults qualified as UPLC
 import PlutusCore.MkPlc (TermLike (builtin), mkIterAppNoAnn)
 import PlutusCore.Pretty (prettyPlcClassicSimple)
-import System.FilePath ((</>))
+import System.FilePath ((<.>), (</>))
 import UntypedPlutusCore qualified as UPlc
 import UntypedPlutusCore.Evaluation.Machine.Cek qualified as UPlc
 
@@ -83,15 +83,20 @@ runTerm ::
   Term TyName Name DefaultUni DefaultFun () ->
   m ()
 runTerm name outputDir term = do
-  (checkedTerm, (evalResult, evalBudget, _evalLog)) <-
-    liftEither $
-      first (RunTermError name . BadTerm) $
-        withTypeCheckedUPlcTerm term $
-          (,) <$> id <*> evalUPlcTerm Nothing
-  writeUPlcTerm (outputDir </> (name <> ".uplc")) checkedTerm
-  liftIO $ Aeson.encodeFile (outputDir </> (name <> ".uplc.budget.result")) evalBudget
-  finalTerm <- liftEither $ first (RunTermError name . EvalFailure) evalResult
-  writeUPlcTerm (outputDir </> (name <> ".uplc.result")) finalTerm
+  case withTypeCheckedUPlcTerm term $ (,) <$> id <*> evalUPlcTerm Nothing of
+    Left typeErr -> throwError . RunTermError name . BadTerm $ typeErr
+    Right (checkedTerm, (result, evalBudget, _)) -> do
+      writeUPlcTerm (outputDir </> (name <> ".uplc")) checkedTerm
+      let budgetFile = outputDir </> name <.> "uplc" <.> "budget" <.> "expected"
+      let outputFile = outputDir </> name <.> "uplc" <.> "expected"
+      case result of
+        Left _ -> do
+          let failureText = "evaluation failure"
+          liftIO . writeFile budgetFile $ failureText
+          liftIO . writeFile outputFile $ failureText
+        Right finalTerm -> do
+          liftIO . Aeson.encodeFile budgetFile $ evalBudget
+          writeUPlcTerm outputFile finalTerm
 
 -- Helpers
 

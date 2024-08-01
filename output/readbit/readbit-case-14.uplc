@@ -1,0 +1,1 @@
+[ [ (builtin readBit) (con bytestring #fff4) ] (con integer 16) ]
