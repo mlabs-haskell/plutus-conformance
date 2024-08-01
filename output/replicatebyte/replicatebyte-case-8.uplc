@@ -1,0 +1,1 @@
+[ [ (builtin replicateByte) (con integer 4) ] (con integer 255) ]

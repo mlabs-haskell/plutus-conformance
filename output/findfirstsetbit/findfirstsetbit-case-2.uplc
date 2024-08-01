@@ -1,0 +1,1 @@
+[ (builtin findFirstSetBit) (con bytestring #0000) ]

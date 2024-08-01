@@ -1,0 +1,1 @@
+[ [ (builtin rotateByteString) (con bytestring #) ] (con integer 3) ]

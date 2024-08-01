@@ -1,0 +1,1 @@
+[ (builtin countSetBits) (con bytestring #) ]

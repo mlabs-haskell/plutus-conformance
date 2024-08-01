@@ -1,0 +1,1 @@
+[ [ (builtin readBit) (con bytestring #f4) ] (con integer 0) ]

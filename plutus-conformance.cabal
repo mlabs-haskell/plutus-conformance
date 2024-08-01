@@ -14,13 +14,18 @@ common warnings
 library
   import:           warnings
   exposed-modules:
+    And
     Aux
     Complement
     CountSetBits
     FindFirstSetBit
+    Or
+    ReadBit
     Replicate
     Rotate
     Shift
+    WriteBits
+    Xor
 
   build-depends:
     , aeson
